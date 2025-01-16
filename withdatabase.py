@@ -79,7 +79,7 @@ def main_app():
 
     # User inputs for stock data
     ticker = st.text_input("Enter Stock Ticker (e.g., AAPL)", "AAPL").upper()
-    start_date = st.date_input("Start Date", value=pd.to_datetime("2020-01-01"))
+    start_date = st.date_input("Start Date", value=pd.to_datetime("2006-01-01"))
     end_date = st.date_input("End Date", value=pd.to_datetime("today"))
 
     if start_date > end_date:
