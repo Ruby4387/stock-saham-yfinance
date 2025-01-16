@@ -96,26 +96,28 @@ def main_app():
             # Interactive tabs
             tab1, tab2, tab3, tab4 = st.tabs(["Candlestick Chart", "RSI", "MACD", "Data"])
 
-           with tab1:  # Grafik Utama
-                fig = go.Figure(data=[go.Candlestick(x=data.index,
-                                                      open=data['Open'],
-                                                      high=data['High'],
-                                                      low=data['Low'],
-                                                      close=data['Close'])])
+            with tab1:  # Candlestick Chart
+                fig = go.Figure(data=[go.Candlestick(
+                    x=data.index,
+                    open=data['Open'],
+                    high=data['High'],
+                    low=data['Low'],
+                    close=data['Close']
+                )])
 
-                fig.update_layout(title=f"Harga Saham {ticker}",
-                                  xaxis_title="Tanggal",
-                                  yaxis_title="Harga",
+                fig.update_layout(title=f"Stock Prices for {ticker}",
+                                  xaxis_title="Date",
+                                  yaxis_title="Price",
                                   xaxis_rangeslider_visible=False,
                                   template="plotly_dark")
 
-                # Rata-rata Bergerak (MA)
-                ma_days = st.slider("Periode Rata-Rata Bergerak", 5, 200, 20)
+                # Moving Average (MA)
+                ma_days = st.slider("Moving Average Period", 5, 200, 20)
                 data[f'MA{ma_days}'] = data['Close'].rolling(window=ma_days).mean()
                 fig.add_trace(go.Scatter(x=data.index, y=data[f'MA{ma_days}'], mode='lines', name=f'MA {ma_days}'))
 
                 # Bollinger Bands
-                bb_window = st.slider("Periode Bollinger Bands", 5, 200, 20)
+                bb_window = st.slider("Bollinger Bands Period", 5, 200, 20)
                 data['MA'] = data['Close'].rolling(window=bb_window).mean()
                 data['Std'] = data['Close'].rolling(window=bb_window).std()
                 data['Upper Band'] = data['MA'] + (data['Std'] * 2)
@@ -124,7 +126,7 @@ def main_app():
                 fig.add_trace(go.Scatter(x=data.index, y=data['Lower Band'], mode='lines', name='Lower Band', line=dict(color='red', width=1)))
 
                 st.plotly_chart(fig)
-               
+
             with tab2:  # Relative Strength Index (RSI)
                 rsi_period = st.slider("RSI Period", 2, 20, 14)
                 delta = data['Close'].diff()
@@ -138,7 +140,7 @@ def main_app():
                 fig_rsi.update_layout(title=f"RSI {ticker}", yaxis_title="RSI", template="plotly_dark", yaxis_range=[0, 100])
                 st.plotly_chart(fig_rsi)
 
-           with tab3:  # MACD
+            with tab3:  # MACD
                 exp1 = data['Close'].ewm(span=12, adjust=False).mean()
                 exp2 = data['Close'].ewm(span=26, adjust=False).mean()
                 macd = exp1 - exp2
