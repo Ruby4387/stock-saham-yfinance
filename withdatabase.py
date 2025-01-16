@@ -5,11 +5,11 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 
-# === Inisialisasi Database SQLite ===
+# === Initialize SQLite Database ===
 DB_FILE = "users.db"
 
 def initialize_database():
-    """Membuat tabel 'users' jika belum ada."""
+    """Creates the 'users' table if it doesn't exist."""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("""
@@ -24,9 +24,9 @@ def initialize_database():
 
 initialize_database()
 
-# === Fungsi-fungsi Database ===
+# === Database Functions ===
 def register_user(username, password):
-    """Menambahkan pengguna baru ke dalam database."""
+    """Adds a new user to the database."""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     try:
@@ -39,7 +39,7 @@ def register_user(username, password):
         conn.close()
 
 def authenticate_user(username, password):
-    """Memeriksa kredensial pengguna di database."""
+    """Checks user credentials in the database."""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
@@ -47,7 +47,7 @@ def authenticate_user(username, password):
     conn.close()
     return user is not None
 
-# === Fungsi Login dan Registrasi ===
+# === Login and Registration Functions ===
 def login():
     st.title("Login")
     username = st.text_input("Username")
@@ -55,48 +55,48 @@ def login():
     if st.button("Login"):
         if authenticate_user(username, password):
             st.session_state["authenticated"] = True
-            st.success("Login berhasil!")
+            st.success("Login successful!")
         else:
-            st.error("Username atau password salah.")
+            st.error("Invalid username or password.")
 
 def register():
     st.title("Register")
-    username = st.text_input("Buat Username")
-    password = st.text_input("Buat Password", type="password")
-    if st.button("Daftar"):
+    username = st.text_input("Create a Username")
+    password = st.text_input("Create a Password", type="password")
+    if st.button("Register"):
         if register_user(username, password):
-            st.success("Registrasi berhasil! Silakan login.")
+            st.success("Registration successful! Please log in.")
         else:
-            st.error("Username sudah digunakan. Silakan pilih username lain.")
+            st.error("Username already exists. Please choose another username.")
 
 def logout():
     st.session_state["authenticated"] = False
-    st.info("Anda telah logout.")
+    st.info("You have logged out.")
 
 # === Main Application ===
 def main_app():
-    st.title("Candlestick Saham Interaktif")
+    st.title("Interactive Stock Candlestick App")
 
-    # Input pengguna
-    ticker = st.text_input("Masukkan Ticker Saham (contoh: AAPL)", "AAPL").upper()
-    start_date = st.date_input("Tanggal Mulai", value=pd.to_datetime("2006-01-01"))
-    end_date = st.date_input("Tanggal Akhir", value=pd.to_datetime("today"))
+    # User inputs for stock data
+    ticker = st.text_input("Enter Stock Ticker (e.g., AAPL)", "AAPL").upper()
+    start_date = st.date_input("Start Date", value=pd.to_datetime("2020-01-01"))
+    end_date = st.date_input("End Date", value=pd.to_datetime("today"))
 
     if start_date > end_date:
-        st.error("Tanggal mulai harus sebelum tanggal akhir.")
+        st.error("Start date must be before end date.")
         st.stop()
 
     try:
-        # Mengambil data saham dari yfinance
+        # Fetch stock data from yfinance
         data = yf.download(ticker, start=start_date, end=end_date)
 
         if data.empty:
-            st.warning(f"Tidak ada data untuk ticker {ticker} dalam rentang tanggal yang dipilih.")
+            st.warning(f"No data found for ticker {ticker} in the selected date range.")
         else:
-            # Membuat tab interaktif
-            tab1, tab2, tab3, tab4 = st.tabs(["Grafik Utama", "RSI", "MACD", "Data"])
+            # Interactive tabs
+            tab1, tab2, tab3, tab4 = st.tabs(["Candlestick Chart", "RSI", "MACD", "Data"])
 
-            with tab1:  # Grafik Candlestick
+            with tab1:  # Candlestick Chart
                 fig = go.Figure(data=[go.Candlestick(
                     x=data.index,
                     open=data['Open'],
@@ -105,20 +105,20 @@ def main_app():
                     close=data['Close']
                 )])
                 fig.update_layout(
-                    title=f"Harga Saham {ticker}",
-                    xaxis_title="Tanggal",
-                    yaxis_title="Harga",
+                    title=f"{ticker} Price Chart",
+                    xaxis_title="Date",
+                    yaxis_title="Price",
                     xaxis_rangeslider_visible=False,
                     template="plotly_dark"
                 )
-                # Menambahkan Rata-rata Bergerak (Moving Average)
-                ma_days = st.slider("Periode Rata-Rata Bergerak", 5, 200, 20)
+                # Add Moving Average
+                ma_days = st.slider("Moving Average Period", 5, 200, 20)
                 data[f'MA{ma_days}'] = data['Close'].rolling(window=ma_days).mean()
                 fig.add_trace(go.Scatter(x=data.index, y=data[f'MA{ma_days}'], mode='lines', name=f'MA {ma_days}'))
                 st.plotly_chart(fig)
 
             with tab2:  # Relative Strength Index (RSI)
-                rsi_period = st.slider("Periode RSI", 2, 20, 14)
+                rsi_period = st.slider("RSI Period", 2, 20, 14)
                 delta = data['Close'].diff()
                 up = delta.clip(lower=0)
                 down = -1 * delta.clip(upper=0)
@@ -141,12 +141,12 @@ def main_app():
                 fig_macd.update_layout(title=f"MACD {ticker}", template="plotly_dark")
                 st.plotly_chart(fig_macd)
 
-            with tab4:  # Dataframe
-                if st.checkbox("Tampilkan Tabel Data"):
+            with tab4:  # Data Table
+                if st.checkbox("Show Data Table"):
                     st.dataframe(data)
 
     except Exception as e:
-        st.error(f"Terjadi kesalahan: {e}. Silakan periksa simbol ticker dan rentang tanggal.")
+        st.error(f"An error occurred: {e}. Please check the ticker symbol and date range.")
 
 # === Main Program ===
 if "authenticated" not in st.session_state:
@@ -161,4 +161,5 @@ if not st.session_state["authenticated"]:
 else:
     if st.sidebar.button("Logout"):
         logout()
-    main_app()
+    else:
+        main_app()
