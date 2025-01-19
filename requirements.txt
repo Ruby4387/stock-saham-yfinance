@@ -3,4 +3,3 @@ yfinance
 plotly
 numpy
 pandas
-firebase-admin
